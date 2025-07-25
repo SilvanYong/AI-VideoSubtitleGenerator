@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI视频字幕制作工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+            line-height: 1.5;
+        }
+
+        .header {
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .settings-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: #2ea043;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .main-page {
+            text-align: center;
+            padding-top: 120px;
+        }
+
+        .main-title {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f0f6fc;
+        }
+
+        .main-subtitle {
+            font-size: 20px;
+            color: #7d8590;
+            margin-bottom: 48px;
+        }
+
+        .create-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .create-btn:hover {
+            background: #2ea043;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f0f6fc;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #f0f6fc;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #e6edf3;
+            font-size: 14px;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #1f6feb;
+            box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
+        }
+
+        .file-upload {
+            border: 2px dashed #30363d;
+            border-radius: 6px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: #1f6feb;
+        }
+
+        .file-upload.dragover {
+            border-color: #238636;
+            background: rgba(35, 134, 54, 0.1);
+        }
+
+        .btn {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+        }
+
+        .btn:hover {
+            background: #30363d;
+            border-color: #484f58;
+        }
+
+        .btn-primary {
+            background: #238636;
+            border-color: #238636;
+        }
+
+        .btn-primary:hover {
+            background: #2ea043;
+            border-color: #2ea043;
+        }
+
+        .btn-danger {
+            background: #da3633;
+            border-color: #da3633;
+        }
+
+        .btn-danger:hover {
+            background: #f85149;
+            border-color: #f85149;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #21262d;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #238636;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .status-success {
+            background: rgba(35, 134, 54, 0.15);
+            border: 1px solid #238636;
+            color: #3fb950;
+        }
+
+        .status-error {
+            background: rgba(218, 54, 51, 0.15);
+            border: 1px solid #da3633;
+            color: #f85149;
+        }
+
+        .status-warning {
+            background: rgba(187, 128, 9, 0.15);
+            border: 1px solid #bb8009;
+            color: #f2cc60;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(1, 4, 9, 0.8);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #7d8590;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .close-btn:hover {
+            color: #f0f6fc;
+        }
+
+        .back-btn {
+            margin-bottom: 20px;
+        }
+
+        .video-preview {
+            max-width: 100%;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 32px;
+            }
+            
+            .container {
+                padding: 20px 16px;
+            }
+            
+            .main-page {
+                padding-top: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="header">
+        <div class="logo">AI字幕制作工具</div>
+        <button class="settings-btn" onclick="openSettings()">⚙️ 设置</button>
+    </header>
+
+    <div class="container">
+        <!-- 主页 -->
+        <div id="mainPage" class="page active">
+            <div class="main-page">
+                <h1 class="main-title">AI视频字幕制作</h1>
+                <p class="main-subtitle">使用先进的AI技术，为您的视频自动生成精准字幕</p>
+                <button class="create-btn" onclick="startSubtitleCreation()">创建字幕</button>
+            </div>
+        </div>
+
+        <!-- 字幕创建页面 -->
+        <div id="subtitlePage" class="page">
+            <button class="btn back-btn" onclick="goBack()">← 返回主页</button>
+            
+            <div class="card">
+                <h2 class="card-title">上传视频</h2>
+                <div class="file-upload" id="fileUpload">
+                    <p>点击此处或拖拽视频文件上传</p>
+                    <p style="color: #7d8590; font-size: 14px; margin-top: 8px;">支持 MP4, AVI, MOV, MKV 格式</p>
+                    <input type="file" id="videoFile" accept=".mp4,.avi,.mov,.mkv" style="display: none;">
+                </div>
+                <div id="videoPreview" style="display: none;">
+                    <video class="video-preview" controls></video>
+                    <p id="videoInfo" style="margin-top: 8px; color: #7d8590;"></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">识别设置</h2>
+                <div class="form-group">
+                    <label class="form-label">识别精度</label>
+                    <select class="form-select" id="accuracy">
+                        <option value="fast">快速模式 (较低精度，处理时间短)</option>
+                        <option value="balanced" selected>平衡模式 (中等精度，适中处理时间)</option>
+                        <option value="high">高精度模式 (最高精度，处理时间长)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">语言</label>
+                    <select class="form-select" id="language">
+                        <option value="zh">中文</option>
+                        <option value="en">英文</option>
+                        <option value="auto" selected>自动检测</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">开始识别</h2>
+                <button class="btn btn-primary" id="startRecognition" onclick="startRecognition()" disabled>开始识别</button>
+                <div id="recognitionProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="progressText">准备中...</p>
+                </div>
+                <div id="statusMessage"></div>
+            </div>
+
+            <div class="card" id="downloadCard" style="display: none;">
+                <h2 class="card-title">下载字幕</h2>
+                <p>识别完成！您可以下载生成的字幕文件。</p>
+                <div style="margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="downloadSubtitle()">下载 SRT 字幕文件</button>
+                    <button class="btn" onclick="previewSubtitle()">预览字幕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">AI模型设置</h3>
+                <button class="close-btn" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">选择AI模型</label>
+                <select class="form-select" id="aiModel">
+                    <option value="openai">OpenAI (GPT-4)</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="google">Google (Gemini)</option>
+                    <option value="deepseek">DeepSeek (R1)</option>
+                    <option value="azure">Azure OpenAI</option>
+                    <option value="local">本地模型 (Whisper)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">API密钥</label>
+                <input type="password" class="form-input" id="apiKey" placeholder="请输入您的API密钥">
+            </div>
+            <div class="form-group" id="endpointGroup" style="display: none;">
+                <label class="form-label">API端点 (可选)</label>
+                <input type="text" class="form-input" id="apiEndpoint" placeholder="https://api.example.com">
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                <button class="btn" onclick="testConnection()">测试连接</button>
+            </div>
+            <div id="settingsStatus"></div>
+        </div>
+    </div>
+
+    <!-- 字幕预览模态框 -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">字幕预览</h3>
+                <button class="close-btn" onclick="closePreview()">&times;</button>
+            </div>
+            <div id="subtitlePreview" style="max-height: 400px; overflow-y: auto; background: #0d1117; padding: 16px; border-radius: 6px; font-family: monospace; font-size: 14px; line-height: 1.6;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideo = null;
+        let subtitleData = null;
+        let settings = {
+            model: 'openai',
+            apiKey: '',
+            endpoint: ''
+        };
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            setupFileUpload();
+            setupModelChange();
+        });
+
+        // 文件上传设置
+        function setupFileUpload() {
+            const fileUpload = document.getElementById('fileUpload');
+            const fileInput = document.getElementById('videoFile');
+
+            fileUpload.addEventListener('click', () => fileInput.click());
+            
+            fileUpload.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUpload.classList.add('dragover');
+            });
+
+            fileUpload.addEventListener('dragleave', () => {
+                fileUpload.classList.remove('dragover');
+            });
+
+            fileUpload.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUpload.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleVideoFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleVideoFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 处理视频文件
+        function handleVideoFile(file) {
+            const allowedTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showStatus('error', '不支持的文件格式，请上传 MP4, AVI, MOV, MKV 格式的视频文件');
+                return;
+            }
+
+            currentVideo = file;
+            const videoPreview = document.getElementById('videoPreview');
+            const video = videoPreview.querySelector('video');
+            const videoInfo = document.getElementById('videoInfo');
+            
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            
+            video.addEventListener('loadedmetadata', () => {
+                const duration = Math.floor(video.duration);
+                const minutes = Math.floor(duration / 60);
+                const seconds = duration % 60;
+                const size = (file.size / (1024 * 1024)).toFixed(2);
+                
+                videoInfo.textContent = `文件: ${file.name} | 时长: ${minutes}:${seconds.toString().padStart(2, '0')} | 大小: ${size}MB`;
+            });
+
+            videoPreview.style.display = 'block';
+            document.getElementById('startRecognition').disabled = false;
+            
+            showStatus('success', '视频上传成功！');
+        }
+
+        // 设置模型变化监听
+        function setupModelChange() {
+            const modelSelect = document.getElementById('aiModel');
+            const endpointGroup = document.getElementById('endpointGroup');
+            
+            modelSelect.addEventListener('change', (e) => {
+                const showEndpoint = ['azure', 'local', 'deepseek'].includes(e.target.value);
+                endpointGroup.style.display = showEndpoint ? 'block' : 'none';
+                
+                // 为DeepSeek设置默认端点
+                if (e.target.value === 'deepseek') {
+                    document.getElementById('apiEndpoint').placeholder = 'https://api.deepseek.com/v1';
+                } else if (e.target.value === 'azure') {
+                    document.getElementById('apiEndpoint').placeholder = 'https://your-resource.openai.azure.com';
+                } else if (e.target.value === 'local') {
+                    document.getElementById('apiEndpoint').placeholder = 'http://localhost:9000';
+                } else {
+                    document.getElementById('apiEndpoint').placeholder = 'https://api.example.com';
+                }
+            });
+        }
+
+        // 页面导航
+        function startSubtitleCreation() {
+            showPage('subtitlePage');
+        }
+
+        function goBack() {
+            showPage('mainPage');
+            resetSubtitlePage();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // 重置字幕页面
+        function resetSubtitlePage() {
+            currentVideo = null;
+            subtitleData = null;
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('startRecognition').disabled = true;
+            document.getElementById('recognitionProgress').style.display = 'none';
+            document.getElementById('downloadCard').style.display = 'none';
+            document.getElementById('statusMessage').innerHTML = '';
+            document.getElementById('videoFile').value = '';
+        }
+
+        // 设置相关
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            const model = document.getElementById('aiModel').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('apiEndpoint').value;
+
+            if (!apiKey && model !== 'local') {
+                showSettingsStatus('error', '请输入API密钥');
+                return;
+            }
+
+            settings = { model, apiKey, endpoint };
+            
+            // 保存到内存中（在实际应用中应该安全存储）
+            sessionStorage.setItem('subtitleSettings', JSON.stringify(settings));
+            
+            showSettingsStatus('success', '设置已保存');
+            setTimeout(closeSettings, 1000);
+        }
+
+        function loadSettings() {
+            const saved = sessionStorage.getItem('subtitleSettings');
+            if (saved) {
+                settings = JSON.parse(saved);
+                document.getElementById('aiModel').value = settings.model;
+                document.getElementById('apiKey').value = settings.apiKey;
+                document.getElementById('apiEndpoint').value = settings.endpoint;
+                
+                const showEndpoint = ['azure', 'local', 'deepseek'].includes(settings.model);
+                document.getElementById('endpointGroup').style.display = showEndpoint ? 'block' : 'none';
+                
+                // 设置对应的端点placeholder
+                if (settings.model === 'deepseek') {
+                    document.getElementById('apiEndpoint').placeholder = 'https://api.deepseek.com/v1';
+                } else if (settings.model === 'azure') {
+                    document.getElementById('apiEndpoint').placeholder = 'https://your-resource.openai.azure.com';
+                } else if (settings.model === 'local') {
+                    document.getElementById('apiEndpoint').placeholder = 'http://localhost:9000';
+                }
+            }
+        }
+
+        function testConnection() {
+            const model = document.getElementById('aiModel').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const endpoint = document.getElementById('apiEndpoint').value;
+            
+            if (!apiKey && model !== 'local') {
+                showSettingsStatus('error', '请先输入API密钥');
+                return;
+            }
+
+            showSettingsStatus('warning', '正在测试连接...');
+            
+            // 根据不同模型显示不同的测试信息
+            let testMessage = '';
+            switch(model) {
+                case 'deepseek':
+                    testMessage = '正在连接DeepSeek R1 API...';
+                    break;
+                case 'openai':
+                    testMessage = '正在连接OpenAI API...';
+                    break;
+                case 'anthropic':
+                    testMessage = '正在连接Anthropic API...';
+                    break;
+                case 'google':
+                    testMessage = '正在连接Google Gemini API...';
+                    break;
+                case 'azure':
+                    testMessage = '正在连接Azure OpenAI...';
+                    break;
+                case 'local':
+                    testMessage = '正在连接本地Whisper服务...';
+                    break;
+            }
+            
+            showSettingsStatus('warning', testMessage);
+            
+            // 模拟连接测试
+            setTimeout(() => {
+                const success = Math.random() > 0.2; // 80% 成功率用于演示
+                if (success) {
+                    let successMsg = `${model === 'deepseek' ? 'DeepSeek R1' : model.toUpperCase()} 连接测试成功！`;
+                    showSettingsStatus('success', successMsg);
+                } else {
+                    showSettingsStatus('error', '连接测试失败，请检查API密钥、端点地址和网络连接');
+                }
+            }, 2000);
+        }
+
+        // 开始识别
+        function startRecognition() {
+            if (!currentVideo) {
+                showStatus('error', '请先上传视频文件');
+                return;
+            }
+
+            if (!settings.apiKey && settings.model !== 'local') {
+                showStatus('error', '请先在设置中配置AI模型和API密钥');
+                return;
+            }
+
+            document.getElementById('startRecognition').disabled = true;
+            document.getElementById('recognitionProgress').style.display = 'block';
+            
+            simulateRecognition();
+        }
+
+        // 模拟识别过程
+        function simulateRecognition() {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const accuracy = document.getElementById('accuracy').value;
+            
+            let progress = 0;
+            const totalTime = accuracy === 'fast' ? 3000 : accuracy === 'balanced' ? 5000 : 8000;
+            const interval = 100;
+            const increment = (interval / totalTime) * 100;
+
+            const stages = ['准备中...', '音频提取中...', 'AI识别中...', '生成字幕中...', '完成！'];
+            let currentStage = 0;
+
+            const timer = setInterval(() => {
+                progress += increment;
+                
+                if (progress > 100) progress = 100;
+                
+                progressFill.style.width = progress + '%';
+                
+                // 更新阶段文本
+                const stageIndex = Math.floor((progress / 100) * (stages.length - 1));
+                if (stageIndex !== currentStage && stageIndex < stages.length) {
+                    currentStage = stageIndex;
+                    progressText.textContent = stages[currentStage];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    completeRecognition();
+                }
+            }, interval);
+        }
+
+        // 完成识别
+        function completeRecognition() {
+            // 生成示例字幕数据
+            subtitleData = generateSampleSubtitle();
+            
+            showStatus('success', '字幕识别完成！');
+            document.getElementById('downloadCard').style.display = 'block';
+            document.getElementById('startRecognition').disabled = false;
+        }
+
+        // 生成示例字幕
+        function generateSampleSubtitle() {
+            return `1
+00:00:01,000 --> 00:00:04,000
+欢迎使用AI视频字幕制作工具
+
+2
+00:00:05,000 --> 00:00:08,000
+这是一个功能强大的字幕生成系统
+
+3
+00:00:09,000 --> 00:00:12,000
+支持多种AI模型和高精度识别
+
+4
+00:00:13,000 --> 00:00:16,000
+让您的视频内容更加精彩`;
+        }
+
+        // 下载字幕
+        function downloadSubtitle() {
+            if (!subtitleData) {
+                showStatus('error', '没有可下载的字幕数据');
+                return;
+            }
+
+            const filename = currentVideo ? currentVideo.name.replace(/\.[^/.]+$/, '') + '.srt' : 'subtitle.srt';
+            const blob = new Blob([subtitleData], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus('success', '字幕文件下载成功！');
+        }
+
+        // 预览字幕
+        function previewSubtitle() {
+            if (!subtitleData) {
+                showStatus('error', '没有可预览的字幕数据');
+                return;
+            }
+
+            document.getElementById('subtitlePreview').textContent = subtitleData;
+            document.getElementById('previewModal').classList.add('active');
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        // 状态消息显示
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        function showSettingsStatus(type, message) {
+            const statusDiv = document.getElementById('settingsStatus');
+            statusDiv.innerHTML = `<div class="status-message status-${type}" style="margin-top: 16px;">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 2000);
+            }
+        }
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
